@@ -12,6 +12,7 @@
 
 #import <ExpoModulesCore/EXJavaScriptRuntime.h>
 #import <ExpoModulesCore/ExpoModulesHostObject.h>
+#import <ExpoModulesCore/EXObjectDeallocator.h>
 #import <ExpoModulesCore/EXJSIUtils.h>
 #import <ExpoModulesCore/EXJSIConversions.h>
 #import <ExpoModulesCore/Swift.h>
@@ -86,7 +87,7 @@ using namespace facebook;
                           argsCount:(NSInteger)argsCount
                               block:(nonnull JSSyncFunctionBlock)block
 {
-  return [self createHostFunction:name argsCount:argsCount block:^jsi::Value(jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> callInvoker, NSArray * _Nonnull arguments) {
+  return [self createHostFunction:name argsCount:argsCount block:^jsi::Value(jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> callInvoker, NSArray<EXJavaScriptValue *> * _Nonnull arguments) {
     return expo::convertObjCObjectToJSIValue(runtime, block(arguments));
   }];
 }
@@ -95,7 +96,7 @@ using namespace facebook;
                            argsCount:(NSInteger)argsCount
                                block:(nonnull JSAsyncFunctionBlock)block
 {
-  return [self createHostFunction:name argsCount:argsCount block:^jsi::Value(jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> callInvoker, NSArray *arguments) {
+  return [self createHostFunction:name argsCount:argsCount block:^jsi::Value(jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> callInvoker, NSArray<EXJavaScriptValue *> * _Nonnull arguments) {
     if (!callInvoker) {
       // In mocked environment the call invoker may be null so it's not supported to call async functions.
       // Testing async functions is a bit more complicated anyway. See `init` description for more.
@@ -109,6 +110,15 @@ using namespace facebook;
     };
     return createPromiseAsJSIValue(runtime, promiseSetup);
   }];
+}
+
+- (nonnull EXJavaScriptObject *)createSharedObjectRefWithId:(NSInteger)sharedObjectId
+{
+  auto hostObjectPtr = std::make_shared<expo::ObjectDeallocator>(^{
+    // TODO: deallocate native shared object
+  });
+  auto jsObjectPtr = std::make_shared<jsi::Object>(jsi::Object::createFromHostObject(*_runtime, hostObjectPtr));
+  return [[EXJavaScriptObject alloc] initWith:jsObjectPtr runtime:self];
 }
 
 #pragma mark - Script evaluation
@@ -134,19 +144,21 @@ using namespace facebook;
 
 #pragma mark - Private
 
-typedef jsi::Value (^JSHostFunctionBlock)(jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> callInvoker, NSArray * _Nonnull arguments);
-
 - (jsi::Function)createHostFunction:(nonnull NSString *)name
                           argsCount:(NSInteger)argsCount
                               block:(nonnull JSHostFunctionBlock)block
 {
   jsi::PropNameID propNameId = jsi::PropNameID::forAscii(*_runtime, [name UTF8String], [name length]);
   std::weak_ptr<react::CallInvoker> weakCallInvoker = _jsCallInvoker;
-  jsi::HostFunctionType function = [weakCallInvoker, block](jsi::Runtime &runtime, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
+  jsi::HostFunctionType function = [weakCallInvoker, block, self](jsi::Runtime &runtime, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
     // Theoretically should check here whether the call invoker isn't null, but in mocked environment
     // there is no need to care about that for synchronous calls, so it's ensured in `createAsyncFunction` instead.
     auto callInvoker = weakCallInvoker.lock();
-    NSArray *arguments = expo::convertJSIValuesToNSArray(runtime, args, count, callInvoker);
+    NSMutableArray<EXJavaScriptValue *> *arguments = [NSMutableArray arrayWithCapacity:count];
+    for (int i = 0; i < count; i++) {
+      std::shared_ptr<jsi::Value> argument = std::make_shared<jsi::Value>(args[i]);
+      arguments[i] = [[EXJavaScriptValue alloc] initWithRuntime:self value:argument];
+    }
     return block(runtime, callInvoker, arguments);
   };
   return jsi::Function::createFromHostFunction(*_runtime, propNameId, (unsigned int)argsCount, function);

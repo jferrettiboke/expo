@@ -92,7 +92,14 @@ public final class ModuleHolder {
   @discardableResult
   func callSync(function functionName: String, args: [Any]) -> Any? {
     if let function = definition.functions[functionName] {
-      return function.callSync(args: args)
+      let result = function.callSync(args: args)
+
+      if let result = result as? SharedObject, let obj = appContext?.runtime?.createObject() {
+        obj.setProperty("godzina", value: "21:37")
+        SharedObjectRegistry.put((native: result, javaScript: obj))
+        return obj
+      }
+      return result
     }
     return nil
   }

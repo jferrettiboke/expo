@@ -29,6 +29,38 @@ class ExpoModulesSpec: ExpoSpec {
       })
     }
 
+    fdescribe("shared object") {
+      class MySharedObject: SharedObject {
+        let value: Int
+
+        init(_ value: Int) {
+          self.value = value
+          super.init()
+        }
+      }
+
+      it("passes") {
+//        let dict = try! runtime?.eval("sharedObject").asDict()
+//        let keys = try! runtime?.eval("Object.keys(sharedObject)").asArray().map { $0?.getRaw() }
+//        let id = try! runtime?.eval("sharedObject.__ref__.id").asInt()
+
+        appContext.moduleRegistry.register(holder: mockModuleHolder(appContext) {
+          $0.name("DUPA")
+
+          function("create") { return MySharedObject(2137) }
+
+          function("getValue") { (sharedObject: MySharedObject) in
+            return sharedObject.value
+          }
+        })
+        let a = try! runtime?.eval("this.papaj = ExpoModules.DUPA.create()")
+        let b = try! runtime?.eval("ExpoModules.DUPA.getValue(this.papaj)")
+
+        expect(a?.isObject()) == true
+        expect(b?.isNumber()) == true
+      }
+    }
+
     describe("host object") {
       it("is defined") {
         expect(try! runtime?.eval("'ExpoModules' in this").asBool()) === true

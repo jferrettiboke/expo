@@ -148,7 +148,14 @@ public final class AppContext {
       throw UndefinedRuntimeException()
     }
     EXJavaScriptRuntimeManager.installExpoModules(to: runtime, withSwiftInterop: interopBridge)
+
+    let sharedObj = runtime.createObject()
+//    let sharedObjRef = runtime.createSharedObjectRef(withId: 2137)
+//    sharedObj.defineProperty("__ref__", value: sharedObjRef, options: [])
+    sharedObj.setDeallocator()
+    runtime.global().setProperty("sharedObject", value: sharedObj)
   }
+
   /**
    Unsets runtime objects that we hold for each module.
    */

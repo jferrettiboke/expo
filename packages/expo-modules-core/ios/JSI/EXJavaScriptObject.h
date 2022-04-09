@@ -10,10 +10,33 @@
 namespace jsi = facebook::jsi;
 #endif // __cplusplus
 
-typedef void (^JSAsyncFunctionBlock)(NSArray * _Nonnull, RCTPromiseResolveBlock _Nonnull, RCTPromiseRejectBlock _Nonnull);
-typedef id _Nullable (^JSSyncFunctionBlock)(NSArray * _Nonnull);
-
 @class EXJavaScriptRuntime;
+@class EXJavaScriptValue;
+
+typedef void (^JSAsyncFunctionBlock)(NSArray<EXJavaScriptValue *> * _Nonnull, RCTPromiseResolveBlock _Nonnull, RCTPromiseRejectBlock _Nonnull);
+typedef id _Nullable (^JSSyncFunctionBlock)(NSArray<EXJavaScriptValue *> * _Nonnull);
+
+/**
+ The property descriptor options for the property being defined or modified.
+ */
+typedef NS_OPTIONS(NSInteger, EXJavaScriptObjectPropertyDescriptor) {
+  /**
+   The default property descriptor.
+   */
+  EXJavaScriptObjectPropertyDescriptorDefault = 0,
+  /**
+   If set, the type of this property descriptor may be changed and if the property may be deleted from the corresponding object.
+   */
+  EXJavaScriptObjectPropertyDescriptorConfigurable = 1 << 0,
+  /**
+   If set, the property shows up during enumeration of the properties on the corresponding object.
+   */
+  EXJavaScriptObjectPropertyDescriptorEnumerable = 1 << 1,
+  /**
+   If set, the value associated with the property may be changed with an assignment operator.
+   */
+  EXJavaScriptObjectPropertyDescriptorWritable = 1 << 2,
+} NS_SWIFT_NAME(JavaScriptObjectProperty);
 
 NS_SWIFT_NAME(JavaScriptObject)
 @interface EXJavaScriptObject : NSObject
@@ -28,6 +51,20 @@ NS_SWIFT_NAME(JavaScriptObject)
  */
 - (nonnull jsi::Object *)get;
 #endif // __cplusplus
+
+#pragma mark - Accessing object properties
+
+- (BOOL)hasProperty:(nonnull NSString *)name;
+
+- (nonnull EXJavaScriptValue *)getProperty:(nonnull NSString *)name;
+
+#pragma mark - Modifying object properties
+
+- (void)setProperty:(nonnull NSString *)name value:(nullable id)value;
+
+- (void)defineProperty:(nonnull NSString *)name value:(nullable id)value options:(EXJavaScriptObjectPropertyDescriptor)options;
+
+- (void)setDeallocator;
 
 #pragma mark - Subscripting
 

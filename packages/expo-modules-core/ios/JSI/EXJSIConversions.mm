@@ -1,6 +1,8 @@
 // Copyright 2018-present 650 Industries. All rights reserved.
 
 #import <ReactCommon/TurboModuleUtils.h>
+#import <ExpoModulesCore/EXJavaScriptValue.h>
+#import <ExpoModulesCore/EXJavaScriptObject.h>
 #import <ExpoModulesCore/EXJSIConversions.h>
 
 namespace expo {
@@ -52,6 +54,12 @@ std::vector<jsi::Value> convertNSArrayToStdVector(jsi::Runtime &runtime, NSArray
 
 jsi::Value convertObjCObjectToJSIValue(jsi::Runtime &runtime, id value)
 {
+  if ([value isKindOfClass:[EXJavaScriptObject class]]) {
+    return jsi::Value(runtime, *[(EXJavaScriptObject *)value get]);
+  }
+  if ([value isKindOfClass:[EXJavaScriptValue class]]) {
+    return jsi::Value(runtime, *[(EXJavaScriptValue *)value get]);
+  }
   if ([value isKindOfClass:[NSString class]]) {
     return convertNSStringToJSIString(runtime, (NSString *)value);
   } else if ([value isKindOfClass:[NSNumber class]]) {

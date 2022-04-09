@@ -19,7 +19,7 @@ NS_SWIFT_NAME(JavaScriptRuntime)
 - (nonnull instancetype)init;
 
 #ifdef __cplusplus
-typedef jsi::Value (^JSHostFunctionBlock)(jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> callInvoker, NSArray * _Nonnull arguments);
+typedef jsi::Value (^JSHostFunctionBlock)(jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> callInvoker, NSArray<EXJavaScriptValue *> * _Nonnull arguments);
 
 - (nonnull instancetype)initWithRuntime:(nonnull jsi::Runtime *)runtime
                             callInvoker:(std::shared_ptr<react::CallInvoker>)callInvoker;
@@ -46,6 +46,7 @@ typedef jsi::Value (^JSHostFunctionBlock)(jsi::Runtime &runtime, std::shared_ptr
 - (jsi::Function)createAsyncFunction:(nonnull NSString *)name
                            argsCount:(NSInteger)argsCount
                                block:(nonnull JSAsyncFunctionBlock)block;
+
 #endif // __cplusplus
 
 /**
@@ -57,6 +58,11 @@ typedef jsi::Value (^JSHostFunctionBlock)(jsi::Runtime &runtime, std::shared_ptr
  Creates a new object for use in Swift.
  */
 - (nonnull EXJavaScriptObject *)createObject;
+
+/**
+ Creates a new shared object with given id.
+ */
+- (nonnull EXJavaScriptObject *)createSharedObjectRefWithId:(NSInteger)sharedObjectId;
 
 #pragma mark - Script evaluation
 
