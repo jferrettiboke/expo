@@ -189,19 +189,26 @@ async function symlinkPackages({
   }
 }
 
-async function updateRNVersion({ projectDir, rnVersion }: { projectDir: string, rnVersion?: string }) {
-  if (!rnVersion) {
-    const mainPkg = require(path.resolve(EXPO_DIR, 'package.json'));
-    const rnVersionOnMain = mainPkg.resolutions?.['react-native'];
-    rnVersion = rnVersionOnMain
-  }
-  
+async function updateRNVersion({
+  projectDir,
+  rnVersion,
+}: {
+  projectDir: string;
+  rnVersion?: string;
+}) {
+  const reactNativeVersion = rnVersion || getLocalReactNativeVersion();
+
   const pkgPath = path.resolve(projectDir, 'package.json');
   const pkg = await fs.readJSON(pkgPath);
-  pkg.dependencies['react-native'] = rnVersion;
+  pkg.dependencies['react-native'] = reactNativeVersion;
 
   await fs.outputJson(path.resolve(projectDir, 'package.json'), pkg, { spaces: 2 });
   await spawnAsync('yarn', [], { cwd: projectDir });
+}
+
+function getLocalReactNativeVersion() {
+  const mainPkg = require(path.resolve(EXPO_DIR, 'package.json'));
+  return mainPkg.resolutions?.['react-native'];
 }
 
 async function runExpoPrebuild({ projectDir }: { projectDir: string }) {
@@ -259,7 +266,7 @@ async function applyGradleFlipperFixtures({ projectDir }: { projectDir: string }
     `FLIPPER_VERSION=0.54.0`,
     `FLIPPER_VERSION=0.99.0`
   );
-  console.log(`Overriding the gradle.properties to FLIPPER_VERSION=0.99.0`)
+  console.log(`Overriding the gradle.properties to FLIPPER_VERSION=0.99.0`);
   await fs.outputFile(gradlePropertiesPath, updatedGradleProperies);
 }
 
