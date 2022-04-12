@@ -188,7 +188,12 @@ function EASUpdatesPreview({ navigation }: ExtensionsScreenProps) {
 
           return (
             <View key={branch.id}>
-              <EASEmptyBranchRow branch={branch} isFirst={isFirst} isLast={isLast} />
+              <EASEmptyBranchRow
+                branch={branch}
+                isFirst={isFirst}
+                isLast={isLast}
+                navigation={navigation}
+              />
               <Divider />
             </View>
           );
@@ -237,7 +242,7 @@ function EASUpdatesPreview({ navigation }: ExtensionsScreenProps) {
 
           return (
             <View key={branch.name}>
-              <EASBranchRow branch={branch} isFirst={isFirst} />
+              <EASBranchRow branch={branch} isFirst={isFirst} navigation={navigation} />
               <Divider />
             </View>
           );

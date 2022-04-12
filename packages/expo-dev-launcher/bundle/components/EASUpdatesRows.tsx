@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import {
   Heading,
   Spacer,
@@ -16,6 +17,7 @@ import { Animated, StyleSheet } from 'react-native';
 
 import { Branch } from '../queries/useBranchesForApp';
 import { Update } from '../queries/useUpdatesForBranch';
+import { ExtensionsStackParamList } from '../screens/ExtensionsStack';
 import { ActivityIndicator } from './ActivityIndicator';
 import { ListButton } from './ListButton';
 
@@ -23,10 +25,10 @@ type EASBranchRowProps = {
   branch: Branch;
   isFirst?: boolean;
   isLast?: boolean;
+  navigation: StackNavigationProp<ExtensionsStackParamList>;
 };
 
-export function EASBranchRow({ branch, isFirst, isLast }: EASBranchRowProps) {
-  const navigation = useNavigation();
+export function EASBranchRow({ branch, isFirst, isLast, navigation }: EASBranchRowProps) {
   const palette = useExpoPalette();
 
   const { name, updates } = branch;

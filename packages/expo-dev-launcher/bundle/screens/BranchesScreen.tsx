@@ -29,10 +29,6 @@ export function BranchesScreen({ navigation }: BranchesScreenProps) {
     refetch,
   } = useBranchesForApp(appId);
 
-  function onBranchPress(branchName: string) {
-    navigation.navigate('Updates', { branchName });
-  }
-
   function Header() {
     if (branches.length > 0) {
       return (
@@ -52,10 +48,7 @@ export function BranchesScreen({ navigation }: BranchesScreenProps) {
 
     return (
       <View>
-        <RecentlyCreatedBranches
-          branches={emptyBranches}
-          onBranchPress={(branch) => onBranchPress(branch.name)}
-        />
+        <RecentlyCreatedBranches branches={emptyBranches} navigation={navigation} />
 
         {incompatibleBranches.length > 0 && (
           <View px="small">
@@ -101,7 +94,9 @@ export function BranchesScreen({ navigation }: BranchesScreenProps) {
     const isFirst = index === 0;
     const isLast = index === branches?.length - 1;
 
-    return <EASBranchRow branch={branch} isFirst={isFirst} isLast={isLast} />;
+    return (
+      <EASBranchRow branch={branch} isFirst={isFirst} isLast={isLast} navigation={navigation} />
+    );
   }
 
   return (
@@ -125,10 +120,10 @@ export function BranchesScreen({ navigation }: BranchesScreenProps) {
 
 type RecentlyCreatedBranchesProps = {
   branches: Branch[];
-  onBranchPress: (branch: Branch) => void;
+  navigation: StackNavigationProp<ExtensionsStackParamList>;
 };
 
-function RecentlyCreatedBranches({ branches, onBranchPress }: RecentlyCreatedBranchesProps) {
+function RecentlyCreatedBranches({ branches, navigation }: RecentlyCreatedBranchesProps) {
   if (branches.length === 0) {
     return null;
   }
@@ -149,7 +144,12 @@ function RecentlyCreatedBranches({ branches, onBranchPress }: RecentlyCreatedBra
 
         return (
           <View key={branch.id}>
-            <EASEmptyBranchRow branch={branch} isFirst={isFirst} isLast={isLast} />
+            <EASEmptyBranchRow
+              branch={branch}
+              isFirst={isFirst}
+              isLast={isLast}
+              navigation={navigation}
+            />
             {!isLast && <Divider />}
           </View>
         );
