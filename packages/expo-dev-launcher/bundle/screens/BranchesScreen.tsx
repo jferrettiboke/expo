@@ -1,12 +1,11 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Heading, View, Divider, Spacer, Text } from 'expo-dev-client-components';
 import * as React from 'react';
-import { BasicButton } from '../components/BasicButton';
 
+import { BasicButton } from '../components/BasicButton';
 import { EASBranchRow, EASEmptyBranchRow } from '../components/EASUpdatesRows';
 import { EmptyBranchesMessage } from '../components/EmptyBranchesMessage';
 import { FlatList } from '../components/FlatList';
-import { LoadMoreButton } from '../components/LoadMoreButton';
 import { getRecentRuntime } from '../functions/getRecentlyRuntime';
 import { useUpdatesConfig } from '../providers/UpdatesConfigProvider';
 import { Branch, useBranchesForApp } from '../queries/useBranchesForApp';
@@ -29,8 +28,6 @@ export function BranchesScreen({ navigation }: BranchesScreenProps) {
     hasNextPage,
     refetch,
   } = useBranchesForApp(appId);
-
-  console.log({ emptyBranches, incompatibleBranches, branches });
 
   function onBranchPress(branchName: string) {
     navigation.navigate('Updates', { branchName });
