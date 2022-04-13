@@ -120,7 +120,7 @@ RCT_EXPORT_METHOD(loadApp:(NSString *)urlString
     return reject(@"ERR_DEV_LAUNCHER_INVALID_URL", @"Cannot parse the provided url.", nil);
   }
   
-  [controller loadApp:url onSuccess:^{
+  [controller loadApp:url withProjectUrl:nil onSuccess:^{
     resolve(nil);
   } onError:^(NSError *error) {
     reject(@"ERR_DEV_LAUNCHER_CANNOT_LOAD_APP", error.localizedDescription, error);

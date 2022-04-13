@@ -257,7 +257,7 @@
   
   NSURL *appUrl = [EXDevLauncherURLHelper getAppURLFromDevLauncherURL:url];
   if (appUrl) {
-    [self loadApp:appUrl onSuccess:nil onError:^(NSError *error) {
+    [self loadApp:appUrl withProjectUrl:nil onSuccess:nil onError:^(NSError *error) {
       __weak typeof(self) weakSelf = self;
       dispatch_async(dispatch_get_main_queue(), ^{
         typeof(self) self = weakSelf;
@@ -305,12 +305,18 @@
 
 - (void)loadApp:(NSURL *)expoUrl withProjectUrl:(NSURL * _Nullable)projectUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError
 {
+  BOOL isUpdatesUrl = [self isUpdatesUrl:expoUrl];
   
   // an update url requires a matching projectUrl
   // if one isn't provided, default to the configured project url in Expo.plist
-  if ([self isUpdatesUrl:expoUrl] && projectUrl == nil) {
+  if (isUpdatesUrl && projectUrl == nil) {
     NSString *projectUrlString = [self getUpdatesConfigForKey:@"EXUpdatesURL"];
     projectUrl = [NSURL URLWithString:projectUrlString];
+  }
+  
+  // if there is no project url and its not an updates url, the project url can be the same as the app url
+  if (!isUpdatesUrl && projectUrl == nil) {
+    projectUrl = expoUrl;
   }
   
   NSString *installationID = [_installationIDHelper getOrCreateInstallationID];
@@ -400,11 +406,6 @@
     
     onError(error);
   }];
-}
-
-- (void)loadApp:(NSURL *)expoUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError
-{
-  [self loadApp:expoUrl withProjectUrl:expoUrl onSuccess:onSuccess onError:onError];
 }
 
 - (void)_initAppWithUrl:(NSURL *)appUrl bundleUrl:(NSURL *)bundleUrl manifest:(EXManifestsManifest * _Nullable)manifest

@@ -17,8 +17,8 @@ public class EXDevLauncherErrorViewController: UIViewController, UITableViewData
       navigateToLauncher()
       return
     }
-
-    manager?.controller?.loadApp(appUrl, onSuccess: nil, onError: { [weak self] _ in
+    
+    manager?.controller?.loadApp(appUrl, withProjectUrl: nil, onSuccess: nil, onError: { [weak self] _ in
       self?.navigateToLauncher()
     })
   }
