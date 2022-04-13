@@ -294,8 +294,25 @@
   return _sourceUrl;
 }
 
-- (void)loadApp:(NSURL *)expoUrl withProjectUrl:(NSURL *)projectUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError
+- (BOOL)isUpdatesUrl:(NSURL *)url
 {
+  if ([url.host isEqual: @"u.expo.dev"]) {
+    return true;
+  }
+  
+  return false;
+}
+
+- (void)loadApp:(NSURL *)expoUrl withProjectUrl:(NSURL * _Nullable)projectUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError
+{
+  
+  // an update url requires a matching projectUrl
+  // if one isn't provided, default to the configured project url in Expo.plist
+  if ([self isUpdatesUrl:expoUrl] && projectUrl == nil) {
+    NSString *projectUrlString = [self getUpdatesConfigForKey:@"EXUpdatesURL"];
+    projectUrl = [NSURL URLWithString:projectUrlString];
+  }
+  
   NSString *installationID = [_installationIDHelper getOrCreateInstallationID];
   expoUrl = [EXDevLauncherURLHelper replaceEXPScheme:expoUrl to:@"http"];
 
@@ -610,8 +627,8 @@
   // url structure for EASUpdates: `http://u.expo.dev/{appId}`
   // this url field is added to app.json.updates when running `eas update:configure`
   // the `u.expo.dev` determines that it is the modern manifest protocol
-  NSString *updatesUrl = [self getUpdatesConfigForKey:@"EXUpdatesURL"];
-  NSURL *url = [NSURL URLWithString:updatesUrl];
+  NSString *projectUrl = [self getUpdatesConfigForKey:@"EXUpdatesURL"];
+  NSURL *url = [NSURL URLWithString:projectUrl];
   NSString *appId = [[url pathComponents] lastObject];
   
   BOOL isModernManifestProtocol = [[url host] isEqualToString:@"u.expo.dev"];
@@ -626,7 +643,7 @@
   
   if (usesEASUpdates) {
     [updatesConfig setObject:appId forKey:@"appId"];
-    [updatesConfig setObject:updatesUrl forKey:@"updatesUrl"];
+    [updatesConfig setObject:projectUrl forKey:@"projectUrl"];
   }
   
   [updatesConfig setObject:@(usesEASUpdates) forKey:@"usesEASUpdates"];

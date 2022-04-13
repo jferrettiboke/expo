@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)onDeepLink:(NSURL *)url options:(NSDictionary *)options;
 
-- (void)loadApp:(NSURL *)expoUrl withProjectUrl:(NSURL *)projectUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError;
+- (void)loadApp:(NSURL *)expoUrl withProjectUrl:(NSURL  * _Nullable)projectUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError;
 
 - (void)loadApp:(NSURL *)url onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError;
 
