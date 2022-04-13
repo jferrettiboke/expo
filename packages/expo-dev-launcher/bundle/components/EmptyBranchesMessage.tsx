@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Linking } from 'react-native';
 
 import { websiteOrigin } from '../apiClient';
-import { getRecentRuntime } from '../functions/getRecentlyRuntime';
+import { getRecentRuntime } from '../functions/getRecentRuntime';
 import { useBuildInfo } from '../providers/BuildInfoProvider';
 import { useUpdatesConfig } from '../providers/UpdatesConfigProvider';
 import { useUser } from '../providers/UserContextProvider';

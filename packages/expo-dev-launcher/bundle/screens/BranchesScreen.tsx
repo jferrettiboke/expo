@@ -6,7 +6,7 @@ import { BasicButton } from '../components/BasicButton';
 import { EASBranchRow, EASEmptyBranchRow } from '../components/EASUpdatesRows';
 import { EmptyBranchesMessage } from '../components/EmptyBranchesMessage';
 import { FlatList } from '../components/FlatList';
-import { getRecentRuntime } from '../functions/getRecentlyRuntime';
+import { getRecentRuntime } from '../functions/getRecentRuntime';
 import { useUpdatesConfig } from '../providers/UpdatesConfigProvider';
 import { Branch, useBranchesForApp } from '../queries/useBranchesForApp';
 import { ExtensionsStackParamList } from './ExtensionsStack';

@@ -19,8 +19,7 @@ import { BasicButton } from '../components/BasicButton';
 import { EASUpdateRow } from '../components/EASUpdatesRows';
 import { FlatList } from '../components/FlatList';
 import { Toasts } from '../components/Toasts';
-import { loadApp } from '../native-modules/DevLauncherInternal';
-import { useBuildInfo } from '../providers/BuildInfoProvider';
+import { loadUpdate } from '../native-modules/DevLauncherInternal';
 import { useToastStack } from '../providers/ToastStackProvider';
 import { useUpdatesConfig } from '../providers/UpdatesConfigProvider';
 import { useChannelsForApp } from '../queries/useChannelsForApp';
@@ -33,7 +32,7 @@ type UpdatesScreenProps = {
 };
 
 export function UpdatesScreen({ route }: UpdatesScreenProps) {
-  const { runtimeVersion } = useBuildInfo();
+  const { runtimeVersion, updatesUrl } = useUpdatesConfig();
   const { branchName } = route.params;
   const toastStack = useToastStack();
 
@@ -70,7 +69,7 @@ export function UpdatesScreen({ route }: UpdatesScreenProps) {
       } else {
         setLoadingUpdateId(update.id);
 
-        loadApp(update.manifestPermalink)
+        loadUpdate(update.manifestPermalink, updatesUrl)
           .catch((error) => {
             setLoadingUpdateId('');
 
@@ -81,7 +80,7 @@ export function UpdatesScreen({ route }: UpdatesScreenProps) {
           .then(() => setLoadingUpdateId(''));
       }
     },
-    [runtimeVersion, branchName]
+    [runtimeVersion, branchName, updatesUrl]
   );
 
   function Header() {

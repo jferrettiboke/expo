@@ -294,13 +294,13 @@
   return _sourceUrl;
 }
 
-- (void)loadApp:(NSURL *)expoUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError
+- (void)loadApp:(NSURL *)expoUrl withProjectUrl:(NSURL *)projectUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError
 {
   NSString *installationID = [_installationIDHelper getOrCreateInstallationID];
   expoUrl = [EXDevLauncherURLHelper replaceEXPScheme:expoUrl to:@"http"];
 
   NSDictionary *updatesConfiguration = [EXDevLauncherUpdatesHelper createUpdatesConfigurationWithURL:expoUrl
-                                                                                          projectURL:expoUrl
+                                                                                          projectURL:projectUrl
                                                                                       installationID:installationID];
 
   void (^launchReactNativeApp)(void) = ^{
@@ -383,6 +383,11 @@
     
     onError(error);
   }];
+}
+
+- (void)loadApp:(NSURL *)expoUrl onSuccess:(void (^ _Nullable)(void))onSuccess onError:(void (^ _Nullable)(NSError *error))onError
+{
+  [self loadApp:expoUrl withProjectUrl:expoUrl onSuccess:onSuccess onError:onError];
 }
 
 - (void)_initAppWithUrl:(NSURL *)appUrl bundleUrl:(NSURL *)bundleUrl manifest:(EXManifestsManifest * _Nullable)manifest
@@ -610,13 +615,18 @@
   NSString *appId = [[url pathComponents] lastObject];
   
   BOOL isModernManifestProtocol = [[url host] isEqualToString:@"u.expo.dev"];
-  BOOL usesEASUpdates = isModernManifestProtocol && appId.length > 0;
+  BOOL expoUpdatesInstalled = EXDevLauncherController.sharedInstance.updatesInterface != nil;
+  BOOL hasAppId = appId.length > 0;
+  
+  BOOL usesEASUpdates = isModernManifestProtocol && expoUpdatesInstalled && hasAppId;
   
   [updatesConfig setObject:runtimeVersion forKey:@"runtimeVersion"];
   [updatesConfig setObject:sdkVersion forKey:@"sdkVersion"];
   
+  
   if (usesEASUpdates) {
     [updatesConfig setObject:appId forKey:@"appId"];
+    [updatesConfig setObject:updatesUrl forKey:@"updatesUrl"];
   }
   
   [updatesConfig setObject:@(usesEASUpdates) forKey:@"usesEASUpdates"];
