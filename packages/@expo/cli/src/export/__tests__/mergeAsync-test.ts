@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { downloadSourcesAsync } from '../downloadSources';
+import { downloadSourcesAsync } from '../mergeAsync';
 
 jest.mock('../../utils/tar', () => ({
   async downloadAndDecompressAsync(url: string, destination: string): Promise<string> {

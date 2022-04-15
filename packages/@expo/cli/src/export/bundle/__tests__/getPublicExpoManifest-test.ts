@@ -25,10 +25,8 @@ describe(getPublicExpoManifestAsync, () => {
       },
       'runtimeVersion'
     );
-    const config = await getPublicExpoManifestAsync('runtimeVersion', {
-      releaseChannel: 'default',
-    });
-    expect(config.exp).toMatchObject({ sdkVersion: undefined, runtimeVersion });
+    const config = await getPublicExpoManifestAsync('runtimeVersion');
+    expect(config).toMatchObject({ sdkVersion: undefined, runtimeVersion });
   });
   it('reads sdkVersion from node module', async () => {
     vol.fromJSON(
@@ -46,8 +44,8 @@ describe(getPublicExpoManifestAsync, () => {
       },
       'sdkVersion'
     );
-    const config = await getPublicExpoManifestAsync('sdkVersion', { releaseChannel: 'default' });
-    expect(config.exp).toMatchObject({ sdkVersion });
+    const config = await getPublicExpoManifestAsync('sdkVersion');
+    expect(config).toMatchObject({ sdkVersion });
   });
   it('reads sdkVersion from app.json', async () => {
     vol.fromJSON(
@@ -63,9 +61,7 @@ describe(getPublicExpoManifestAsync, () => {
       },
       'sdkVersionInAppDotJson'
     );
-    const config = await getPublicExpoManifestAsync('sdkVersionInAppDotJson', {
-      releaseChannel: 'default',
-    });
-    expect(config.exp).toMatchObject({ sdkVersion });
+    const config = await getPublicExpoManifestAsync('sdkVersionInAppDotJson');
+    expect(config).toMatchObject({ sdkVersion });
   });
 });

@@ -1,8 +1,7 @@
-import { ExpoAppManifest, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
+import { ExpoAppManifest, getConfig } from '@expo/config';
 
 import { env } from '../../utils/env';
 import { CommandError } from '../../utils/errors';
-import { PublishOptions } from './createBundles';
 import { getResolvedLocalesAsync } from './getResolvedLocales';
 
 function assertUnversioned(sdkVersion?: string) {
@@ -12,41 +11,19 @@ function assertUnversioned(sdkVersion?: string) {
   }
 }
 
-export async function getPublicExpoManifestAsync(
-  projectRoot: string,
-  options: Pick<PublishOptions, 'releaseChannel'> = {}
-): Promise<{
-  exp: ExpoAppManifest;
-  pkg: PackageJSONConfig;
-  hooks: ExpoConfig['hooks'];
-}> {
-  if (options.releaseChannel != null && typeof options.releaseChannel !== 'string') {
-    throw new CommandError('INVALID_OPTIONS', 'releaseChannel must be a string');
-  }
-  options.releaseChannel = options.releaseChannel || 'default';
-
-  // Verify that exp/app.json and package.json exist
-  const {
-    exp: { hooks, runtimeVersion },
-  } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
+export async function getPublicExpoManifestAsync(projectRoot: string): Promise<ExpoAppManifest> {
   // Read the config in public mode which strips the `hooks`.
-  const { exp, pkg } = getConfig(projectRoot, {
+  const { exp } = getConfig(projectRoot, {
     isPublicConfig: true,
-    // enforce sdk validation if user is not using runtimeVersion
-    skipSDKVersionRequirement: !!runtimeVersion,
+    // This shouldn't be needed since the CLI is vendored in `expo`.
+    skipSDKVersionRequirement: false,
   });
 
   assertUnversioned(exp.sdkVersion);
 
-  exp.locales = await getResolvedLocalesAsync(projectRoot, exp);
-
   return {
-    exp: {
-      ...exp,
-      sdkVersion: exp.sdkVersion!,
-    },
-    pkg,
-    hooks,
+    ...exp,
+    locales: await getResolvedLocalesAsync(projectRoot, exp),
+    sdkVersion: exp.sdkVersion!,
   };
 }

@@ -21,7 +21,6 @@ type ExportAssetsOptions = {
  * Configures exp, preparing it for asset export
  *
  * @modifies {exp}
- *
  */
 async function updateManifestWithAssets(
   projectRoot: string,
