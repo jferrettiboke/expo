@@ -8,10 +8,10 @@ export const withIosBuildProperties: ConfigPlugin<PluginConfigType> = (config, p
   return withBuildPodfileProps(config, {
     sourceConfig: props,
     configToPropertyRules: [
-      // {
-      //   propName: 'ios.deploymentTarget',
-      //   propValueGetter: (config) => config.ios?.deploymentTarget,
-      // },
+      {
+        propName: 'ios.useFrameworks',
+        propValueGetter: (config) => config.ios?.useFrameworks,
+      },
     ],
   });
 };
