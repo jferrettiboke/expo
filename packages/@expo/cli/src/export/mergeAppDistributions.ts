@@ -5,6 +5,7 @@ import path from 'path';
 import semver from 'semver';
 
 import * as Log from '../log';
+import { copyAsync, ensureDirectoryAsync } from '../utils/dir';
 import { CommandError } from '../utils/errors';
 
 type SelfHostedIndex = ExpoAppManifest & {
@@ -16,7 +17,7 @@ function isSelfHostedIndex(obj: any): obj is SelfHostedIndex {
 }
 
 // put index.jsons into memory
-async function putJsonInMemory(indexPath: string, accumulator: SelfHostedIndex[]) {
+async function putJsonInMemory(indexPath: string) {
   const index = await JsonFile.readAsync(indexPath);
 
   if (!isSelfHostedIndex(index)) {
@@ -27,9 +28,9 @@ async function putJsonInMemory(indexPath: string, accumulator: SelfHostedIndex[]
   }
   if (Array.isArray(index)) {
     // index.json could also be an array
-    accumulator.push(...index);
+    return index;
   } else {
-    accumulator.push(index);
+    return [index];
   }
 }
 
@@ -40,9 +41,10 @@ export async function mergeAppDistributions(
   outputDir: string
 ): Promise<void> {
   const assetPathToWrite = path.resolve(projectRoot, outputDir, 'assets');
-  await fs.promises.mkdir(assetPathToWrite, { recursive: true });
+  await ensureDirectoryAsync(assetPathToWrite);
+
   const bundlesPathToWrite = path.resolve(projectRoot, outputDir, 'bundles');
-  await fs.promises.mkdir(bundlesPathToWrite, { recursive: true });
+  await ensureDirectoryAsync(bundlesPathToWrite);
 
   // merge files from bundles and assets
   const androidIndexes: SelfHostedIndex[] = [];
@@ -56,36 +58,24 @@ export async function mergeAppDistributions(
       // copy file over to assetPath
       const sourceAssetDir = path.resolve(projectRoot, sourceDir, 'assets');
       const outputAssetDir = path.resolve(projectRoot, outputDir, 'assets');
-      const assetPromise = fs.copy(sourceAssetDir, outputAssetDir);
+      const assetPromise = copyAsync(sourceAssetDir, outputAssetDir);
       promises.push(assetPromise);
 
       // copy files over to bundlePath
       const sourceBundleDir = path.resolve(projectRoot, sourceDir, 'bundles');
       const outputBundleDir = path.resolve(projectRoot, outputDir, 'bundles');
-      const bundlePromise = fs.copy(sourceBundleDir, outputBundleDir);
+      const bundlePromise = copyAsync(sourceBundleDir, outputBundleDir);
       promises.push(bundlePromise);
 
       await Promise.all(promises);
     }
 
     const androidIndexPath = path.resolve(projectRoot, sourceDir, 'android-index.json');
-    await putJsonInMemory(androidIndexPath, androidIndexes);
+    androidIndexes.push(...(await putJsonInMemory(androidIndexPath)));
 
     const iosIndexPath = path.resolve(projectRoot, sourceDir, 'ios-index.json');
-    await putJsonInMemory(iosIndexPath, iosIndexes);
+    iosIndexes.push(...(await putJsonInMemory(iosIndexPath)));
   }
-
-  // sort indexes by descending sdk value
-  const getSortedIndex = (indexes: SelfHostedIndex[]) => {
-    return indexes.sort((index1: SelfHostedIndex, index2: SelfHostedIndex) => {
-      if (semver.eq(index1.sdkVersion, index2.sdkVersion)) {
-        Log.error(
-          `Encountered multiple index.json with the same SDK version ${index1.sdkVersion}. This could result in undefined behavior.`
-        );
-      }
-      return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
-    });
-  };
 
   const sortedAndroidIndexes = getSortedIndex(androidIndexes);
   const sortedIosIndexes = getSortedIndex(iosIndexes);
@@ -93,31 +83,38 @@ export async function mergeAppDistributions(
   // Save the json arrays to disk
   await writeArtifactSafelyAsync(
     projectRoot,
-    null,
     path.join(outputDir, 'android-index.json'),
     JSON.stringify(sortedAndroidIndexes)
   );
 
   await writeArtifactSafelyAsync(
     projectRoot,
-    null,
     path.join(outputDir, 'ios-index.json'),
     JSON.stringify(sortedIosIndexes)
   );
 }
 
+// sort indexes by descending sdk value
+function getSortedIndex(indexes: SelfHostedIndex[]): SelfHostedIndex[] {
+  return indexes.sort((index1: SelfHostedIndex, index2: SelfHostedIndex) => {
+    if (semver.eq(index1.sdkVersion, index2.sdkVersion)) {
+      Log.error(
+        `Encountered multiple index.json with the same SDK version ${index1.sdkVersion}. This could result in undefined behavior.`
+      );
+    }
+    return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
+  });
+}
+
+// TODO: Remove this unrelated stuff..
 export async function writeArtifactSafelyAsync(
   projectRoot: string,
-  keyName: string | null,
   artifactPath: string,
   artifact: string | Uint8Array
 ) {
   const pathToWrite = path.resolve(projectRoot, artifactPath);
   if (!fs.existsSync(path.dirname(pathToWrite))) {
-    const errorMsg = keyName
-      ? `app.json specifies: ${pathToWrite}, but that directory does not exist.`
-      : `app.json specifies ${keyName}: ${pathToWrite}, but that directory does not exist.`;
-    Log.warn(errorMsg);
+    Log.warn(`app.json specifies: ${pathToWrite}, but that directory does not exist.`);
   } else {
     await fs.promises.writeFile(pathToWrite, artifact);
   }

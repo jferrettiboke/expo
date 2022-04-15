@@ -1,13 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 
-import * as Log from '../log';
-import { resolvePlatformOption } from '../prebuild/resolveOptions';
+import * as Log from '../../log';
+import { resolvePlatformOption } from '../../prebuild/resolveOptions';
+import { printBundleSizes } from '../printBundleSizes';
+import { Options } from '../resolveOptions';
 import { createBundlesAsync } from './createBundles';
 import { exportAssetsAsync } from './exportAssets';
-import { getPublishExpConfigAsync } from './getPublishExpConfig';
-import { printBundleSizes } from './printBundleSizes';
-import { Options } from './resolveOptions';
+import { getPublicExpoManifestAsync } from './getPublicExpoManifest';
 import {
   writeAssetMapAsync,
   writeBundlesAsync,
@@ -39,7 +39,7 @@ export async function exportAppAsync(
 ): Promise<void> {
   const platforms = resolvePlatformOption(options.platform, { loose: true });
 
-  const { exp } = await getPublishExpConfigAsync(projectRoot, {});
+  const { exp } = await getPublicExpoManifestAsync(projectRoot, {});
 
   const absoluteOutputDir = path.resolve(projectRoot, options.outputDir);
 

@@ -1,10 +1,10 @@
 import { vol } from 'memfs';
 
-import { getPublishExpConfigAsync } from '../getPublishExpConfig';
+import { getPublicExpoManifestAsync } from '../getPublicExpoManifest';
 
 jest.mock('fs');
 
-describe(getPublishExpConfigAsync, () => {
+describe(getPublicExpoManifestAsync, () => {
   afterAll(() => {
     vol.reset();
   });
@@ -25,7 +25,9 @@ describe(getPublishExpConfigAsync, () => {
       },
       'runtimeVersion'
     );
-    const config = await getPublishExpConfigAsync('runtimeVersion', { releaseChannel: 'default' });
+    const config = await getPublicExpoManifestAsync('runtimeVersion', {
+      releaseChannel: 'default',
+    });
     expect(config.exp).toMatchObject({ sdkVersion: undefined, runtimeVersion });
   });
   it('reads sdkVersion from node module', async () => {
@@ -44,7 +46,7 @@ describe(getPublishExpConfigAsync, () => {
       },
       'sdkVersion'
     );
-    const config = await getPublishExpConfigAsync('sdkVersion', { releaseChannel: 'default' });
+    const config = await getPublicExpoManifestAsync('sdkVersion', { releaseChannel: 'default' });
     expect(config.exp).toMatchObject({ sdkVersion });
   });
   it('reads sdkVersion from app.json', async () => {
@@ -61,7 +63,7 @@ describe(getPublishExpConfigAsync, () => {
       },
       'sdkVersionInAppDotJson'
     );
-    const config = await getPublishExpConfigAsync('sdkVersionInAppDotJson', {
+    const config = await getPublicExpoManifestAsync('sdkVersionInAppDotJson', {
       releaseChannel: 'default',
     });
     expect(config.exp).toMatchObject({ sdkVersion });

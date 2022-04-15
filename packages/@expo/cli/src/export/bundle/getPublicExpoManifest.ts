@@ -1,24 +1,18 @@
-import {
-  ExpoAppManifest,
-  ExpoConfig,
-  getConfig,
-  PackageJSONConfig,
-  ProjectTarget,
-} from '@expo/config';
+import { ExpoAppManifest, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 
-import { env } from '../utils/env';
-import { CommandError } from '../utils/errors';
+import { env } from '../../utils/env';
+import { CommandError } from '../../utils/errors';
+import { PublishOptions } from './createBundles';
 import { getResolvedLocalesAsync } from './getResolvedLocales';
 
-export type PublishOptions = {
-  releaseChannel?: string;
-  target?: ProjectTarget;
-  resetCache?: boolean;
-  maxWorkers?: number;
-  quiet?: boolean;
-};
+function assertUnversioned(sdkVersion?: string) {
+  // Only allow projects to be published with UNVERSIONED if a correct token is set in env
+  if (sdkVersion === 'UNVERSIONED' && !env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {
+    throw new CommandError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
+  }
+}
 
-export async function getPublishExpConfigAsync(
+export async function getPublicExpoManifestAsync(
   projectRoot: string,
   options: Pick<PublishOptions, 'releaseChannel'> = {}
 ): Promise<{
@@ -43,19 +37,14 @@ export async function getPublishExpConfigAsync(
     skipSDKVersionRequirement: !!runtimeVersion,
   });
 
-  const { sdkVersion } = exp;
-
-  // Only allow projects to be published with UNVERSIONED if a correct token is set in env
-  if (sdkVersion === 'UNVERSIONED' && !env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {
-    throw new CommandError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
-  }
+  assertUnversioned(exp.sdkVersion);
 
   exp.locales = await getResolvedLocalesAsync(projectRoot, exp);
 
   return {
     exp: {
       ...exp,
-      sdkVersion: sdkVersion!,
+      sdkVersion: exp.sdkVersion!,
     },
     pkg,
     hooks,
